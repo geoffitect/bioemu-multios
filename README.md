@@ -1,137 +1,187 @@
+# BioEmu MultiOS Fork 🍎
+
+> **Apple M Compatible Version** of Microsoft's BioEmu Protein Folding AI
+
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org/downloads)
+[![Apple Silicon](https://img.shields.io/badge/Apple-Silicon-black.svg)](https://support.apple.com/en-us/HT211814)
+[![MPS Accelerated](https://img.shields.io/badge/MPS-Accelerated-orange.svg)](https://developer.apple.com/metal/pytorch/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <h1>
 <p align="center">
-    <img src="assets/emu.png" alt="BioEmu logo" width="300"/>
+    <img src="assets/emu_apple.png" alt="BioEmu logo with Apple sunglasses" width="300"/>
 </p>
 </h1>
 
-[![DOI:10.1101/2024.12.05.626885](https://zenodo.org/badge/DOI/10.1101/2024.12.05.626885.svg)](https://doi.org/10.1101/2024.12.05.626885)
-[![Requires Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg?logo=python&logoColor=white)](https://python.org/downloads)
+This is an **Apple Silicon optimized fork** of Microsoft's [BioEmu](https://github.com/microsoft/bioemu) that replaces CUDA operations with Metal Performance Shaders (MPS) and CPU fallback for seamless operation on Apple M1/M2/M3 Macs.
 
+## 🎯 What's New in This Fork
 
-# Biomolecular Emulator (BioEmu)
+### ✅ **Complete CUDA-to-MPS Port**
+- **MPS Acceleration**: Uses Metal Performance Shaders for GPU operations
+- **Smart Device Selection**: Automatic MPS/CPU routing based on operation type
+- **Float64 Compatibility**: CPU fallback for float64 operations (MPS limitation)
+- **Error Handling**: Robust fallback mechanisms
 
-Biomolecular Emulator (BioEmu for short) is a model that samples from the approximated equilibrium distribution of structures for a protein monomer, given its amino acid sequence.
+### ✅ **Apple Silicon ColabFold**
+- **M2-Compatible Setup**: Custom ColabFold installation for Apple Silicon
+- **JAX CPU Backend**: Optimized for Apple Silicon architecture
+- **Automatic Detection**: Platform-aware installation scripts
+- **No CUDA Dependencies**: Clean Apple Silicon deployment
 
-For more information, see our [preprint](https://www.biorxiv.org/content/10.1101/2024.12.05.626885v1.abstract).
+### ✅ **Enhanced Testing & Documentation**
+- **M2 Test Suite**: Comprehensive Apple Silicon compatibility tests
+- **Installation Guides**: Step-by-step Apple Silicon setup
+- **Performance Benchmarks**: Expected performance on different Mac models
+- **Troubleshooting**: Common issues and solutions
 
-This repository contains inference code and model weights.
+## 🚀 Quick Start
 
-## Table of Contents
-- [Installation](#installation)
-- [Sampling structures](#sampling-structures)
-- [Citation](#citation)
-- [Get in touch](#get-in-touch)
-
-## Installation
-bioemu is provided as a Linux-only pip-installable package:
-
+### Installation
 ```bash
-pip install bioemu
+# Clone the Apple Silicon fork
+git clone https://github.com/latent-spacecraft/bioemu-multios.git
+cd bioemu-apple
+
+# Create environment
+conda create -n bioemu python=3.11
+conda activate bioemu
+
+# Install package
+pip install -e .
 ```
 
-> [!NOTE]
-> The first time `bioemu` is used to sample structures, it will also setup [Colabfold](https://github.com/sokrypton/ColabFold) on a separate virtual environment for MSA and embedding generation. By default this setup uses the `~/.bioemu_colabfold` directory, but if you wish to have this changed please manually set the `BIOEMU_COLABFOLD_DIR` environment variable accordingly before sampling for the first time.
+### Basic Usage
+```bash
+# Test Apple Silicon compatibility
+bioemu-test-m2
 
-
-## Sampling structures
-You can sample structures for a given protein sequence using the `sample` module. To run a tiny test using the default model parameters and denoising settings:
+# Sample protein structures
+bioemu-sample --sequence GYDPETGTWG --num_samples 10 --output_dir ~/samples
 ```
-python -m bioemu.sample --sequence GYDPETGTWG --num_samples 10 --output_dir ~/test-chignolin
-```
 
-Alternatively, you can use the Python API:
+## 📊 Performance Comparison
 
+| Hardware | Original (CUDA) | Apple Fork (MPS+CPU) | Status |
+|----------|----------------|---------------------|--------|
+| Apple M1 | ❌ Not Supported | ✅ Working | ~90s/sample* |
+| Apple M2 | ❌ Not Supported | ✅ **Optimized** | ~60s/sample* |
+| Apple M3 | ❌ Not Supported | ✅ **Optimized** | ~45s/sample* |
+| Intel Mac | ⚠️ CPU Only | ✅ CPU + Fallback | ~120s/sample* |
+
+*_10-residue protein, 1 sample. Performance varies by sequence length._
+
+## 🛠 Technical Details
+
+### Device Selection Logic
 ```python
-from bioemu.sample import main as sample
-sample(sequence='GYDPETGTWG', num_samples=10, output_dir='~/test_chignolin')
+# Automatic device optimization
+MPS → CUDA → CPU          # For float32 operations (model inference)
+CUDA → CPU → MPS          # For float64 operations (numerical precision)
 ```
 
-The model parameters will be automatically downloaded from [huggingface](https://huggingface.co/microsoft/bioemu). A path to a single-sequence FASTA file can also be passed to the `sequence` argument.
+### Key Components
+- **`device_utils.py`**: Smart device management
+- **`colabfold_setup/setup_m2.sh`**: Apple Silicon ColabFold installer
+- **Modified modules**: `sample.py`, `so3_sde.py`, `rigid_utils.py`
+- **Test suite**: `tests/test_m2_compatibility.py`
 
-Sampling times will depend on sequence length and available infrastructure. The following table gives times for collecting 1000 samples measured on an A100 GPU with 80 GB VRAM for sequences of different lengths (using a `batch_size_100=20` setting in `sample.py`):
- | sequence length | time / min |
- | --------------: | ---------: |
- |             100 |          4 |
- |             300 |         40 |
- |             600 |        150 |
+## 🆚 Differences from Original
 
-By default, unphysical structures (steric clashes or chain discontinuities) will be filtered out, so you will typically get fewer samples in the output than requested. The difference can be very large if your protein has large disordered regions which are very likely to produce clashes. If you want to get all generated samples in the output, irrespective of whether they are physically valid, use the '--filter_samples=False' argument.
-``
+| Feature | Original BioEmu | Apple Silicon Fork |
+|---------|----------------|-------------------|
+| **GPU Support** | CUDA only | MPS + CPU fallback |
+| **ColabFold** | CUDA installation | Apple Silicon compatible |
+| **Float64 Ops** | CUDA/CPU | CPU (MPS limitation) |
+| **Installation** | Linux focused | macOS optimized |
+| **Testing** | CUDA tests | MPS + M2 tests |
+| **Dependencies** | NVIDIA packages | Apple optimized |
 
-> [!NOTE]
-> If you wish to use your own generated MSA instead of the ones retrieved via Colabfold, you can pass an A3M file containing the query sequence as the first row to the `sequence` argument. Additionally, the `msa_host_url` argument can be used to override the default Colabfold MSA query server. See [sample.py](./src/bioemu/sample.py) for more options.
+## 📦 Package Distribution
 
-This code only supports sampling structures of monomers. You can try to sample multimers using the [linker trick](https://x.com/ag_smith/status/1417063635000598528), but in our limited experiments, this has not worked well.
-## Reproducing results from the preprint
-You can use this code together with code from [bioemu-benchmarks](https://github.com/microsoft/bioemu-benchmarks) to approximately reproduce results from our [preprint](https://www.biorxiv.org/content/10.1101/2024.12.05.626885v1).
-
-The `bioemu-v1.0` checkpoint contains the model weights used to produce the results in the preprint. Due to simplifications made in the embedding computation and a more efficient sampler, the results obtained with this code are not identical but consistent with the statistics shown in the preprint, i.e., mode coverage and free energy errors averaged over the proteins in a test set. Results for individual proteins may differ. For more details, please check the [BIOEMU_RESULTS.md](https://github.com/microsoft/bioemu-benchmarks/blob/main/bioemu_benchmarks/BIOEMU_RESULTS.md) document on the bioemu-benchmarks repository.
-
-
-## Side-chain reconstruction and MD-relaxation
-BioEmu outputs structures in backbone frame representation. To reconstruct the side-chains, several tools are available. As an example, we interface with HPacker (https://github.com/gvisani/hpacker) to conduct side-chain reconstruction, and also provide basic tooling for running a short molecular dynamics (MD) equilibration.
-
-> [!WARNING]
-> This code is experimental and relies on a [conda-based package manager](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) due to `hpacker` having `conda` as a dependency. Make sure that `conda` is in your `PATH` before running the following code.
-
-Install optional dependencies:
-
+### Install from Package
 ```bash
-pip install bioemu[md]
+# Install the pre-built package from wheel
+
+pip install dist/bioemu_multios-0.1.12a1-py3-none-any.whl
 ```
 
-You can compute side-chain reconstructions via the `bioemu.sidechains_relax` module:
+### Build from Source
 ```bash
-python -m bioemu.sidechain_relax --pdb-path path/to/topology.pdb --xtc-path path/to/samples.xtc
+# Build wheel
+python -m build --wheel
+
+# Install built package
+pip install dist/bioemu_multios-*.whl
 ```
 
-When using `hpacker` sidechain reconstruction, please cite this publication:
-```bibtex
-@InProceedings{HPacker2024,
-  author = {Visani, Gian Marco and Galvin, William and Pun, Michael and Nourmohammad, Armita},
-  title = {H-Packer: Holographic Rotationally Equivariant Convolutional Neural Network for Protein Side-Chain Packing},
-  booktitle = {Proceedings of the 18th Machine Learning in Computational Biology meeting},
-  pages = {230--249},
-  year = {2024},
-  volume = {240},
-  series = {Proceedings of Machine Learning Research},
-  publisher = {PMLR},
-  url = {https://proceedings.mlr.press/v240/visani24a.html}
-}
+## 🧪 Testing
+
+### Compatibility Test
+```bash
+bioemu-test-m2
 ```
 
-> [!NOTE]
-> The first time this module is invoked, it will attempt to install `hpacker` and its dependencies into a separate `hpacker` conda environment. If you wish for it to be installed in a different location, please set the `HPACKER_ENVNAME` environment variable before using this module for the first time.
+### End-to-End Test
+```bash
+bioemu-sample --sequence GYDP --num_samples 1 --output_dir ~/test
+```
 
-> [!NOTE]
-> The side-chain relaxation code requires `cuda >= 12`.
+### Expected Output
+```
+=== BioEmu Apple M2 MPS Compatibility Test ===
+MPS available: True
+CUDA available: False
+Optimal device: mps
+✅ Float32 operations on mps: torch.Size([10, 10])
+✅ Float64 operations on cpu: torch.Size([10, 10])
+✅ Rigid operations on: mps:0
+✅ SO3SDE initialized successfully with MPS/CPU dtype handling!
+🎉 All tests passed! BioEmu is successfully ported for Apple M2!
+```
 
-By default, side-chain reconstruction and local energy minimization are performed (no full MD integration for efficiency reasons).
-Note that the runtime of this code scales with the size of the system.
-We suggest running this code on a selection of samples rather than the full set.
+## 🤝 Contributing
 
-There are two other options:
-- To only run side-chain reconstruction without MD equilibration, add `--no-md-equil`.
-- To run a short NVT equilibration (0.1 ns), add `--md-protocol nvt_equil`
+This fork maintains compatibility with the original BioEmu while adding Apple Silicon support. 
 
-To see the full list of options, call `python -m bioemu.sidechain_relax --help`.
+### Contribution Areas
+- Apple Silicon optimizations
+- MPS compatibility improvements  
+- Performance benchmarking
+- Documentation updates
+- Bug fixes and testing
 
-The script saves reconstructed all-heavy-atom structures in `samples_sidechain_rec.{pdb,xtc}` and MD-equilibrated structures in `samples_md_equil.{pdb,xtc}` (filename to be altered with `--outname other_name`).
+### Guidelines
+1. Test on Apple Silicon hardware
+2. Ensure MPS compatibility
+3. Maintain CPU fallback functionality
+4. Update tests and documentation
 
-## Third-party code
-The code in the `openfold` subdirectory is copied from [openfold](https://github.com/aqlaboratory/openfold) with minor modifications. The modifications are described in the relevant source files.
-## Get in touch
-If you have any questions not covered here, please create an issue or contact the BioEmu team by writing to the corresponding author on our [preprint](https://doi.org/10.1101/2024.12.05.626885).
+## 📄 License & Attribution
 
-## Citation
-If you are using our code or model, please consider citing our work:
+- **License**: MIT (same as original)
+- **Original Work**: Microsoft Research - [BioEmu](https://github.com/microsoft/bioemu)
+- **Apple Silicon Port**: [Geoff Taghon](https://github.com/geoffitect)
+- **Citation**: Please cite both the original BioEmu paper and mention this Apple Silicon fork
+
+### Original Citation
 ```bibtex
 @article {BioEmu2024,
-    author = {Lewis, Sarah and Hempel, Tim and Jim{\'e}nez-Luna, Jos{\'e} and Gastegger, Michael and Xie, Yu and Foong, Andrew Y. K. and Satorras, Victor Garc{\'\i}a and Abdin, Osama and Veeling, Bastiaan S. and Zaporozhets, Iryna and Chen, Yaoyi and Yang, Soojung and Schneuing, Arne and Nigam, Jigyasa and Barbero, Federico and Stimper, Vincent and Campbell, Andrew and Yim, Jason and Lienen, Marten and Shi, Yu and Zheng, Shuxin and Schulz, Hannes and Munir, Usman and Clementi, Cecilia and No{\'e}, Frank},
+    author = {Lewis, Sarah and Hempel, Tim and Jiménez-Luna, José and ...},
     title = {Scalable emulation of protein equilibrium ensembles with generative deep learning},
     year = {2024},
     doi = {10.1101/2024.12.05.626885},
     journal = {bioRxiv}
 }
 ```
+
+## 🔗 Links
+
+- **Original Repository**: [microsoft/bioemu](https://github.com/microsoft/bioemu)
+- **Apple Silicon Fork**: [latent-spacecraft/bioemu-multios](https://github.com/yourusername/bioemu-apple)
+- **Documentation**: [Installation Guide](./INSTALL_APPLE.md)
+- **Commands Reference**: [Commands Guide](./COMMANDS.md)
+
+---
+
+**🍎 Optimized for Apple | 🔬 Powered by BioEmu | 🧬 Advancing Protein Science**
