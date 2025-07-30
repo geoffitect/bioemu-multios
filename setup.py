@@ -5,7 +5,7 @@ setup.py for BioEmu Apple Silicon Fork
 Apple M2/M3 compatible version of Microsoft's BioEmu protein folding AI.
 This fork replaces CUDA operations with MPS (Metal Performance Shaders) and CPU fallback.
 
-Author: Apple Silicon Port
+Author: Geoff Taghon - Latent Spacecraft
 Original: Microsoft Research
 License: MIT
 
