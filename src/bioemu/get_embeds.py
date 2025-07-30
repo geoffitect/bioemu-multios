@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -15,14 +16,25 @@ from Bio.SeqRecord import SeqRecord
 
 StrPath = str | os.PathLike
 
-
-COLABFOLD_INSTALL_SCRIPT = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "colabfold_setup", "setup.sh"
-)
-
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+def _get_colabfold_install_script() -> str:
+    """Get the appropriate ColabFold install script based on platform."""
+    script_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "colabfold_setup")
+    
+    # Detect Apple Silicon (M1/M2/M3)
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        script_path = os.path.join(script_dir, "setup_m2.sh")
+        logger.info("Detected Apple Silicon - using M2-compatible ColabFold setup")
+    else:
+        script_path = os.path.join(script_dir, "setup.sh")
+        logger.info("Using standard ColabFold setup")
+    
+    return script_path
+
+COLABFOLD_INSTALL_SCRIPT = _get_colabfold_install_script()
 
 
 def shahexencode(s: str) -> str:
@@ -62,11 +74,13 @@ def ensure_colabfold_install() -> str:
     colabfold_dir = _get_colabfold_dir()
     colabfold_batch_exec = os.path.join(colabfold_dir, "bin", "colabfold_batch")
     colabfold_patched_file = os.path.join(colabfold_dir, ".COLABFOLD_PATCHED")
+    colabfold_patched_file_m2 = os.path.join(colabfold_dir, ".COLABFOLD_PATCHED_M2")
     colabfold_bin_dir = os.path.dirname(colabfold_batch_exec)
     if os.path.exists(colabfold_batch_exec):
         # Colabfold present
-        # Check whether it's been patched
-        assert os.path.exists(colabfold_patched_file), "Colabfold not patched!"
+        # Check whether it's been patched (either original or M2 version)
+        patched = os.path.exists(colabfold_patched_file) or os.path.exists(colabfold_patched_file_m2)
+        assert patched, "Colabfold not patched!"
     else:
         logger.info(f"Colabfold not present under {colabfold_dir}. Installing...")
         result = subprocess.run(
@@ -143,7 +157,7 @@ def get_colabfold_embeds(
 
     Args:
         seq: Protein sequence to query
-        cache_embeds_dir: Cache directory where embeddings will be stored. If None, defaults to ~/.bioemu_embeds_cache.
+        cache_embeds_dir: Cache directory where embeddings will be stored. If None, defaults to a child of the colabfold install directory.
         msa_file: MSA A3M file to use as input. If None, the sequence is used as input.
         msa_host_url: MSA host URL. If None, defaults to the colabfold default, which is a remote server.
 

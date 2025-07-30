@@ -1,0 +1,27 @@
+# Core dependencies from pyproject.toml
+torch>=2.6.0
+torch_geometric>=2.6.1
+mdtraj>=1.9.9
+modelcif==0.7
+bio>=1.5.9
+fire==0.7.0
+huggingface-hub
+hydra-core
+dm-tree
+stackprinter
+typer
+uv
+
+# Optional MD dependencies (without CUDA - we'll handle device selection)
+# openmm==8.2.0  # Commented out - CUDA dependency, handle separately
+
+# Development dependencies
+pytest
+pytest-cov
+pre-commit
+
+# Additional dependencies that may be needed
+numpy
+scipy
+tqdm
+pyyaml

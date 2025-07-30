@@ -15,14 +15,15 @@ from .test_embeds import TEST_SEQ, mock_run_colabfold
 
 # Write a score model mock that inputs a batch and t, and outputs a dict of pos and node_orientations as keys
 def mock_score_model(batch, t):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    from bioemu.device_utils import get_optimal_device
+    device = get_optimal_device()
     return {
         "pos": torch.rand(batch["pos"].shape).to(device),
         "node_orientations": torch.rand(batch["node_orientations"].shape[0], 3).to(device),
     }
 
 
-def test_generate_batch():
+def test_generate_batch(tmp_path):
     sequence = TEST_SEQ
     sdes = {"node_orientations": DiGSO3SDE(), "pos": CosineVPSDE()}
     batch_size = 2
@@ -37,6 +38,7 @@ def test_generate_batch():
     with patch("bioemu.get_embeds.run_colabfold", side_effect=mock_run_colabfold), patch(
         "bioemu.get_embeds.ensure_colabfold_install"
     ):
+        # cache_embeds_dir could be None when input to get_colabfold_embeds
         batch = generate_batch(
             score_model=mock_score_model,
             sequence=sequence,

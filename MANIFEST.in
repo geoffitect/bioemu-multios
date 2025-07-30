@@ -1,2 +1,34 @@
-include src/bioemu/config/**/*.yaml
-include src/bioemu/config/**/*.yml
+# Include documentation and configuration files
+include README.md
+include LICENSE
+include NOTICE.md
+include SECURITY.md
+include CODE_OF_CONDUCT.md
+include MODEL_CARD.md
+include requirements.txt
+
+# Include Apple Silicon port documentation
+recursive-include .claude *.md
+
+# Include test files
+recursive-include tests *.py *.yaml *.npz *.pdb *.ptkeep
+
+# Include ColabFold setup scripts and patches
+recursive-include src/bioemu/colabfold_setup *.sh *.patch
+
+# Include configuration files
+recursive-include src/bioemu/config *.yaml
+recursive-include src/bioemu/config *.yml
+
+# Include OpenFold utilities
+recursive-include src/bioemu/openfold *.py
+
+# Include any additional data files
+include cgmanifest.json
+
+# Exclude development files
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
+global-exclude .git*
+global-exclude *.egg-info/*

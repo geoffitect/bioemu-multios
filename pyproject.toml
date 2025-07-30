@@ -3,12 +3,32 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bioemu"
+name = "bioemu-apple"
 dynamic = ["version"]
-description = "Biomolecular emulator"
+description = "Biomolecular Emulator - Apple Silicon Compatible Fork"
 authors = [
+    {name = "Apple Silicon Port"},
+]
+maintainers = [
+    {name = "Microsoft Research"},
 ]
 requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["protein", "folding", "ai", "machine-learning", "apple-silicon", "mps", "pytorch", "bioinformatics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research", 
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11", 
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
 dependencies = [
     "mdtraj>=1.9.9",
     "torch_geometric>=2.6.1",
@@ -25,6 +45,16 @@ dependencies = [
 ]
 readme = "README.md"
 
+[project.urls]
+"Homepage" = "https://github.com/yourusername/bioemu-apple"
+"Original Repository" = "https://github.com/microsoft/bioemu"
+"Bug Reports" = "https://github.com/yourusername/bioemu-apple/issues"
+"Documentation" = "https://github.com/yourusername/bioemu-apple/blob/main/.claude/COMMANDS.md"
+
+[project.scripts]
+bioemu-sample = "bioemu.sample:main"
+bioemu-test-m2 = "tests.test_m2_compatibility:main"
+
 
 [tool.setuptools.dynamic]
 version = {attr = "bioemu.__version__"}
@@ -32,12 +62,18 @@ version = {attr = "bioemu.__version__"}
 
 [project.optional-dependencies]
 dev = [
-    "pytest", # For developers
+    "pytest",
     "pytest-cov",
     "pre-commit",
+    "black",
+    "ruff",
+]
+test = [
+    "pytest",
+    "pytest-cov",
 ]
 md = [
-    "openmm[cuda12]==8.2.0",
+    "openmm==8.2.0",  # CPU version for Apple Silicon compatibility
 ]
 
 [tool.black]

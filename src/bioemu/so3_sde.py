@@ -13,6 +13,7 @@ from torch._prims_common import DeviceLikeType
 from tqdm import tqdm
 
 from .sde_lib import SDE, _broadcast_like, maybe_expand
+from .device_utils import get_optimal_device, get_optimal_device_for_dtype, to_device
 
 logger = logging.getLogger(__name__)
 
@@ -1155,9 +1156,13 @@ class BaseSampleSO3(nn.Module):
         current_device = sigma_grid.device
         sigma_grid_tmp = sigma_grid.to(torch.float64)
 
-        # If cuda is available, initialize everything on GPU.
-        if torch.cuda.is_available():
-            sigma_grid_tmp = sigma_grid_tmp.to(device="cuda")
+        # If GPU (CUDA/MPS) is available, initialize everything on GPU.
+        # For float64 operations, prefer CPU over MPS (which doesn't support float64)
+        # Even if Pytorch Lightning usually handles GPU allocation after initialization, this is
+        # required to initialize the module in GPU reducing the initializaiton time by orders of magnitude.
+        optimal_device = get_optimal_device_for_dtype(torch.float64)
+        if optimal_device.type != "cpu":
+            sigma_grid_tmp = to_device(sigma_grid_tmp, optimal_device)
 
         # Set up grid for angle resolution. Convert to double precision for better handling of numerics.
         omega_grid = torch.linspace(0.0, 1, self.num_omega + 1).to(sigma_grid_tmp)
@@ -1656,9 +1661,11 @@ class ScoreSO3(nn.Module):
         current_device = sigma_grid.device
         sigma_grid_tmp = sigma_grid.to(torch.float64)
 
-        # If cuda is available, initialize everything on GPU.
-        if torch.cuda.is_available():
-            sigma_grid_tmp = sigma_grid_tmp.to(device="cuda")
+        # If GPU (CUDA/MPS) is available, initialize everything on GPU.
+        # For float64 operations, prefer CPU over MPS (which doesn't support float64)
+        optimal_device = get_optimal_device_for_dtype(torch.float64)
+        if optimal_device.type != "cpu":
+            sigma_grid_tmp = to_device(sigma_grid_tmp, optimal_device)
 
         # Set up grid for angle resolution. Convert to double precision for better handling of
         # numerics.

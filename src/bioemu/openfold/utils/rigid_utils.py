@@ -29,6 +29,7 @@ from typing import Any
 
 import numpy as np
 import torch
+from ...device_utils import to_device, get_optimal_device
 
 
 def rot_matmul(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
@@ -738,12 +739,12 @@ class Rotation:
         Analogous to the cuda() method of torch Tensors
 
         Returns:
-            A copy of the Rotation in CUDA memory
+            A copy of the Rotation in GPU memory (CUDA/MPS)
         """
         if self._rot_mats is not None:
-            return Rotation(rot_mats=self._rot_mats.cuda(), quats=None)
+            return Rotation(rot_mats=to_device(self._rot_mats), quats=None)
         elif self._quats is not None:
-            return Rotation(rot_mats=None, quats=self._quats.cuda(), normalize_quats=False)
+            return Rotation(rot_mats=None, quats=to_device(self._quats), normalize_quats=False)
         else:
             raise ValueError("Both rotations are None")
 
@@ -1365,4 +1366,5 @@ class Rigid:
         Returns:
             A version of the transformation on GPU
         """
-        return Rigid(self._rots.cuda(), self._trans.cuda())
+        device = get_optimal_device()
+        return Rigid(self._rots.to(device, None), to_device(self._trans, device))
