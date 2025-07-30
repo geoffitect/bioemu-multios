@@ -3,11 +3,11 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bioemu-apple"
+name = "bioemu-multios"
 dynamic = ["version"]
 description = "Biomolecular Emulator - Apple Silicon Compatible Fork"
 authors = [
-    {name = "Apple Silicon Port"},
+    {name = "Latent Spacecraft"},
 ]
 maintainers = [
     {name = "Microsoft Research"},
@@ -46,10 +46,10 @@ dependencies = [
 readme = "README.md"
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/bioemu-apple"
+"Homepage" = "https://github.com/latent-spacecraft/bioemu-multios"
 "Original Repository" = "https://github.com/microsoft/bioemu"
-"Bug Reports" = "https://github.com/yourusername/bioemu-apple/issues"
-"Documentation" = "https://github.com/yourusername/bioemu-apple/blob/main/.claude/COMMANDS.md"
+"Bug Reports" = "https://github.com/latent-spacecraft/bioemu-multios/issues"
+"Documentation" = "https://github.com/latent-spacecraft/bioemu-multios/blob/main/COMMANDS.md"
 
 [project.scripts]
 bioemu-sample = "bioemu.sample:main"
