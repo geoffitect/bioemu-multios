@@ -25,11 +25,14 @@ This repository contains inference code and model weights.
 - [Citation](#citation)
 
 ## Installation
-bioemu is provided as a Linux-only pip-installable package:
+bioemu-multios is provided as a Linux, MacOS pip-installable package:
 
 ```bash
-pip install bioemu
+pip install setup.py
 ```
+
+### MacOS
+This version of BioEmu is designed for full compatibility with Apple Silicon - MPS. No CUDA device is needed.
 
 > [!NOTE]
 > The first time `bioemu` is used to sample structures, it will also setup [Colabfold](https://github.com/sokrypton/ColabFold) on a separate virtual environment for MSA and embedding generation. By default this setup uses the `~/.bioemu_colabfold` directory, but if you wish to have this changed please manually set the `BIOEMU_COLABFOLD_DIR` environment variable accordingly before sampling for the first time.
