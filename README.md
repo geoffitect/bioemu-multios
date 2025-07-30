@@ -1,7 +1,7 @@
 
 <h1>
 <p align="center">
-    <img src="assets/emu.png" alt="BioEmu logo" width="300"/>
+    <img src="assets/emu_apple.png" alt="BioEmu logo wearing Apple Computer sunglasses" width="300"/>
 </p>
 </h1>
 
